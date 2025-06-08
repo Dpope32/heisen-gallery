@@ -1,0 +1,6 @@
+@echo off
+echo Building gallery with latest images...
+rmdir /s /q dist 2>nul
+call npm run build
+echo Starting Heisen Gallery...
+start /b "" cmd /c "set NODE_ENV=production && npx electron . > nul 2>&1"
