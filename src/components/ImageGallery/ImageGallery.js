@@ -1,7 +1,7 @@
 // ImageGallery.js
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useLocalStorage } from '../../src/hooks/useLocalStorage';
-import useKeyNavigation from '../../src/hooks/useKeyNavigation';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import useKeyNavigation from '../../hooks/useKeyNavigation';
 import './ImageGallery.css';
 import images from '../imageImports';
 import Masonry from 'react-masonry-css';
