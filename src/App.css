@@ -17,37 +17,6 @@ body {
   height: 100vh;
 }
 
-.lock-button {
-  padding: 6px 12px;
-  background-color: #064700;
-  color: #005700;
-  border: 1px solid #00ff00;
-  border-radius: 4px;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.9em;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 5px rgba(0, 255, 0, 0.2);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-right: 20px;
-}
-
-.lock-button::before {
-  content: "🔒";
-  font-size: 1em;
-}
-
-.lock-button:hover {
-  background-color: #00ff00;
-  color: #000;
-  text-shadow: none;
-  transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
-}
-
 .header {
   background-color: #1a1a1a;
   padding: 10px 20px;
@@ -63,12 +32,79 @@ body {
   z-index: 100;
 }
 
+.header-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.auto-scroll-button {
+  padding: 6px 12px;
+  background-color: #064700;
+  color: #00ff00;
+  border: 1px solid #00ff00;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 5px rgba(0, 255, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.auto-scroll-button:hover {
+  background-color: #00ff00;
+  color: #000;
+  text-shadow: none;
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+}
+
+.auto-scroll-button.active {
+  background-color: #00ff00;
+  color: #000;
+}
+
+.lock-button {
+  padding: 6px 12px;
+  background-color: #064700;
+  color: #005700;
+  border: 1px solid #00ff00;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 5px rgba(0, 255, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lock-button::before {
+  content: "🔒";
+  font-size: 1em;
+}
+
+.lock-button:hover {
+  background-color: #00ff00;
+  color: #000;
+  text-shadow: none;
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+}
+
 .main-content {
   display: flex;
   flex-direction: row;
-  margin-top: 20px;
+  margin-top: 60px;
   width: 100%;
   height: calc(100vh - 60px);
+  overflow-y: auto;
 }
 
 .gallery-section {

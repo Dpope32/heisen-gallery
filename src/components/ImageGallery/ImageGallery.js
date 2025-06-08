@@ -1,5 +1,5 @@
 // ImageGallery.js
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import useKeyNavigation from '../../hooks/useKeyNavigation';
 import './ImageGallery.css';
@@ -15,7 +15,11 @@ const getAvailableFolders = () => {
 };
 const folders = getAvailableFolders();
 
-const ImageGallery = ({ defaultFolder }) => {
+const AUTO_SCROLL_INTERVAL = 50;
+const AUTO_SCROLL_STEP = 2;
+const AUTO_SCROLL_DURATION = 10 * 60 * 1000;
+
+const ImageGallery = forwardRef(({ defaultFolder, autoScrollCommand, showAutoScrollDialog, onAutoScrollDialogContinue, onAutoScrollDialogStop, onAutoScrollStateChange }, ref) => {
   const [favorites, setFavorites] = useLocalStorage('favorites', []);
   const [selectedFolder, setSelectedFolder] = useState(favorites.length > 0 ? defaultFolder : "Home");
   const [selectedImage, setSelectedImage] = useState(null);
@@ -23,6 +27,11 @@ const ImageGallery = ({ defaultFolder }) => {
   const [showFirstConfirm, setShowFirstConfirm] = useState(false);
   const [showSecondConfirm, setShowSecondConfirm] = useState(false);
   const [loadedVideos, setLoadedVideos] = useState(new Set());
+  const [isAutoScrolling, setIsAutoScrolling] = useState(false);
+  const [autoScrollStartTime, setAutoScrollStartTime] = useState(null);
+  const scrollIntervalRef = useRef(null);
+  const scrollDirectionRef = useRef(1);
+  const galleryContainerRef = useRef(null);
 
   // Add video refs and logging
   const videoRefs = useRef({});
@@ -129,8 +138,80 @@ const ImageGallery = ({ defaultFolder }) => {
   };
   const breakpointColumnsObj = { default: 5, 1600: 4, 1200: 3, 800: 2, 600: 1 };
 
+  // Auto-scroll logic
+  const startAutoScroll = useCallback(() => {
+    if (!galleryContainerRef.current) {
+      console.log('AutoScroll: galleryContainerRef is null');
+      return;
+    }
+    console.log('AutoScroll: Starting');
+    setIsAutoScrolling(true);
+    if (onAutoScrollStateChange) onAutoScrollStateChange(true);
+    setAutoScrollStartTime(Date.now());
+    const scroll = () => {
+      const gallery = galleryContainerRef.current;
+      if (!gallery) {
+        console.log('AutoScroll: galleryContainerRef is null in scroll');
+        return;
+      }
+      const { scrollTop, scrollHeight, clientHeight } = gallery;
+      if (scrollTop + clientHeight >= scrollHeight) {
+        scrollDirectionRef.current = -1;
+        console.log('AutoScroll: Bouncing up');
+      } else if (scrollTop <= 0) {
+        scrollDirectionRef.current = 1;
+        console.log('AutoScroll: Bouncing down');
+      }
+      gallery.scrollTop += AUTO_SCROLL_STEP * scrollDirectionRef.current;
+    };
+    scrollIntervalRef.current = setInterval(scroll, AUTO_SCROLL_INTERVAL);
+  }, [onAutoScrollStateChange]);
+
+  const stopAutoScroll = useCallback(() => {
+    if (scrollIntervalRef.current) {
+      clearInterval(scrollIntervalRef.current);
+      scrollIntervalRef.current = null;
+    }
+    setIsAutoScrolling(false);
+    if (onAutoScrollStateChange) onAutoScrollStateChange(false);
+    console.log('AutoScroll: Stopped');
+  }, [onAutoScrollStateChange]);
+
+  useEffect(() => {
+    if (galleryContainerRef.current) {
+      console.log('AutoScroll: galleryContainerRef attached', galleryContainerRef.current);
+    }
+  }, [galleryContainerRef]);
+
+  useImperativeHandle(ref, () => ({
+    startAutoScroll,
+    stopAutoScroll,
+    isAutoScrolling: () => isAutoScrolling
+  }), [startAutoScroll, stopAutoScroll, isAutoScrolling]);
+
+  // Listen for autoScrollCommand from parent
+  useEffect(() => {
+    if (autoScrollCommand === 'start') startAutoScroll();
+    if (autoScrollCommand === 'stop') stopAutoScroll();
+    // eslint-disable-next-line
+  }, [autoScrollCommand]);
+
+  // Show dialog after 10 minutes
+  useEffect(() => {
+    if (!isAutoScrolling || !autoScrollStartTime) return;
+    const checkTime = () => {
+      const elapsed = Date.now() - autoScrollStartTime;
+      if (elapsed >= AUTO_SCROLL_DURATION) {
+        stopAutoScroll();
+        if (onAutoScrollDialogStop) onAutoScrollDialogStop();
+      }
+    };
+    const interval = setInterval(checkTime, 1000);
+    return () => clearInterval(interval);
+  }, [isAutoScrolling, autoScrollStartTime, stopAutoScroll, onAutoScrollDialogStop]);
+
   return (
-    <div className="gallery-container dark">
+    <div className="gallery-container dark" ref={galleryContainerRef}>
       <div className="folder-tabs">
         {folders.map(folder => (
           <button key={folder} onClick={() => handleFolderChange(folder)} className={`folder-tab ${selectedFolder === folder ? 'active' : ''}`}>
@@ -228,5 +309,5 @@ const ImageGallery = ({ defaultFolder }) => {
       )}
     </div>
   );
-};
+});
 export default ImageGallery;
