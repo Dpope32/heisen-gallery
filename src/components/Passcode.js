@@ -3,7 +3,7 @@ import './Passcode.css';
 
 const Passcode = ({ onUnlock }) => {
   const [input, setInput] = useState('');
-  const correctPasscode = '191912728';
+  const correctPasscode = process.env.REACT_APP_PASSCODE || '000000';
 
   const handleButtonClick = (value) => {
     if (input.length < 9) {
