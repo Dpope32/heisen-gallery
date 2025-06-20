@@ -118,3 +118,6 @@ build/
 
 # Electron-Forge
 out/
+
+# Scripts directory
+scripts/
