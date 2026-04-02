@@ -1,14 +1,11 @@
 // App.js
-
 import React, { useState, Suspense, lazy, useRef, useCallback } from 'react';
 import useInactivityTimer from './hooks/useInactivityTimer';
 import Passcode from './components/Passcode';
 import './App.css';
 import './HackerTheme.css';
 
-// Dynamically import ImageGallery
 const ImageGallery = lazy(() => import('./components/ImageGallery/ImageGallery'));
-
 const INACTIVITY_TIMEOUT = 60 * 60 * 1000;
 
 function App() {
@@ -45,8 +42,6 @@ function App() {
       localStorage.removeItem('lastActivity');
     }
   };
-
-
 
   const handleAutoScrollClick = useCallback(() => {
     if (imageGalleryRef.current && imageGalleryRef.current.isAutoScrolling && imageGalleryRef.current.isAutoScrolling()) {
@@ -88,7 +83,6 @@ function App() {
           />
         </Suspense>
       </div>
-
     </div>
   );
 }

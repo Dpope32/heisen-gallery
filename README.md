@@ -38,7 +38,7 @@ A modern, secure desktop image gallery application built with Electron and React
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Dpope32/heisen-gallery
    cd heisen-gallery
    ```
 
@@ -57,7 +57,7 @@ A modern, secure desktop image gallery application built with Electron and React
    ```
 
 4. **Add your images**
-   - **Create the Images folder**: `src/Images/` (this folder doesn't exist by default!)
+   - **Create the Images folder**: `src/Images/` (this folder doesn't exist by default and should be added to the .gitignore!)
    - **Home screen**: Place images directly in `src/Images/` to show on Home tab
    - **Dynamic folders**: Create subfolders like `src/Images/Vacation/`, `src/Images/Art/` - each becomes a clickable folder tab!
    - **Supported formats**: JPG, PNG, SVG, MP4

@@ -12,7 +12,7 @@ const AutoScrollDialog = ({ onContinue, onStop, timeRemaining }) => {
           onStop();
           return 0;
         }
-        return prev - (100 / (timeRemaining * 10)); // Update every 100ms
+        return prev - (100 / (timeRemaining * 10)); 
       });
     }, 100);
 
