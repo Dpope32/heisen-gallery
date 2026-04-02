@@ -93,6 +93,36 @@ app.on('ready', () => {
     return result;
   });
 
+  // IPC: import dropped files into a target folder
+  ipcMain.handle('import-images', (_event, { filePaths, folder }) => {
+    const allowedExtensions = ['.png', '.jpg', '.jpeg', '.svg', '.mp4'];
+    const imagesPath = getImagesPath();
+    const targetDir = path.join(imagesPath, folder);
+
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+
+    let count = 0;
+    for (const srcPath of filePaths) {
+      const ext = path.extname(srcPath).toLowerCase();
+      if (!allowedExtensions.includes(ext)) continue;
+
+      const baseName = path.basename(srcPath, ext);
+      let destPath = path.join(targetDir, `${baseName}${ext}`);
+      let suffix = 2;
+      while (fs.existsSync(destPath)) {
+        destPath = path.join(targetDir, `${baseName} (${suffix})${ext}`);
+        suffix++;
+      }
+
+      fs.copyFileSync(srcPath, destPath);
+      count++;
+    }
+
+    return { success: true, count };
+  });
+
   createWindow();
 });
 

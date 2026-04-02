@@ -20,6 +20,7 @@ A modern, secure desktop image gallery application built with Electron and React
 - **Smart Folder System**: Organize images into custom folders
 - **Favorites System**: Heart/unheart images for quick access
 - **Dynamic Import**: Automatically discovers images from folder structure
+- **Drag & Drop Import**: Drag images/videos onto the window to import into any folder or create a new one
 - **Search & Filter**: Browse by folder with instant switching
 
 ### 🎨 Interface
@@ -57,9 +58,9 @@ A modern, secure desktop image gallery application built with Electron and React
    ```
 
 4. **Add your images**
-   - **Create the Images folder**: `src/Images/` (this folder doesn't exist by default and should be added to the .gitignore!)
-   - **Home screen**: Place images directly in `src/Images/` to show on Home tab
-   - **Dynamic folders**: Create subfolders like `src/Images/Vacation/`, `src/Images/Art/` - each becomes a clickable folder tab!
+   - **Create the Images folder**: `src/Images/` (this folder doesn't exist by default and is gitignored)
+   - **Drag & drop**: Drag files onto the running app to import them into any folder
+   - **Manual**: Place images directly in `src/Images/` for the Home tab, or in subfolders like `src/Images/Vacation/` for folder tabs
    - **Supported formats**: JPG, PNG, SVG, MP4
 
 5. **Launch the application**
@@ -86,11 +87,12 @@ npm run package
 heisen-gallery/
 ├── src/
 │   ├── components/
-│   │   ├── ImageGallery/     # Main gallery components
+│   │   ├── ImageGallery/     # Gallery grid, viewer, and items
+│   │   ├── DropZone/         # Drag & drop import overlay
 │   │   ├── AutoScrollDialog/ # Auto-scroll controls
 │   │   └── Passcode.js      # Security component
 │   ├── hooks/               # Custom React hooks
-│   ├── Images/              # Your image collection
+│   ├── Images/              # Your image collection (gitignored)
 │   └── assets/              # App icons and resources
 ├── forge.config.js          # Electron Forge configuration
 └── webpack.config.js        # Webpack build configuration
@@ -109,6 +111,7 @@ heisen-gallery/
 - **Keyboard**: Arrow keys (←/→) to navigate, ESC to close viewer
 - **Folders**: Click folder tabs to switch collections
 - **Favorites**: Click heart icon to save favorites
+- **Import**: Drag image/video files onto the window to import
 - **Auto-scroll**: Click play button for hands-free viewing
 - **Lock**: Click lock button or wait 1 hour for auto-lock
 
@@ -129,25 +132,27 @@ heisen-gallery/
 - **Webpack**: Module bundling and asset optimization
 
 ### Architecture
-- **Main Process**: Electron app initialization and window management
+- **Main Process**: Electron app initialization, window management, IPC handlers, and custom `media://` protocol for serving images
 - **Renderer Process**: React application with component-based architecture
 - **Custom Hooks**: Reusable logic for auto-scroll, keyboard navigation, and storage
 - **Local Storage**: Persistent favorites and settings without external dependencies
 
 ### Performance
+- **Filesystem-based media**: Images are served directly from disk via a custom `media://` protocol — no webpack bundling of media files, so startup is fast regardless of collection size
 - **Code Splitting**: Lazy-loaded components for faster startup
-- **Image Optimization**: File-loader with organized asset structure  
 - **Memory Management**: Efficient rendering with React.memo and useMemo
 - **Responsive Images**: Adaptive loading based on viewport size
 
 ## 🔧 Configuration
 
 ### Adding Images
-**⚠️ Important**: You must create the `src/Images/` folder first!
 
-Images are automatically imported from `src/Images/`:
-- **Home tab**: Files placed directly in `src/Images/` (e.g., `src/Images/photo1.jpg`)
-- **Dynamic tabs**: Each subfolder becomes a clickable tab (e.g., `src/Images/Vacation/` → "Vacation" tab)
+**Option 1 — Drag & drop**: Drag files onto the running app. A green overlay appears where you can pick an existing folder or create a new one. The gallery refreshes automatically.
+
+**Option 2 — Manual**: Place files in `src/Images/` and restart the app.
+
+- **Home tab**: Files placed directly in `src/Images/`
+- **Dynamic tabs**: Each subfolder becomes a clickable tab
 - **Supported formats**: `.jpg`, `.jpeg`, `.png`, `.svg`, `.mp4`
 
 Example structure:
@@ -180,8 +185,8 @@ src/Images/
 ## 🐛 Troubleshooting
 
 ### Common Issues
-- **No images showing**: Did you create the `src/Images/` folder? It doesn't exist by default!
-- **Images not loading**: Ensure images are in `src/Images/` and restart app
+- **No images showing**: Create the `src/Images/` folder, or drag & drop files onto the app to create it automatically
+- **Images not loading**: Ensure images are in `src/Images/` (or use drag & drop)
 - **Folders not appearing**: Subfolders in `src/Images/` become tabs automatically
 - **Password not working**: Check your `.env` file, default fallback is `000000`
 - **Performance issues**: Reduce image file sizes, close other applications

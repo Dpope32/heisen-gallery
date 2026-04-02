@@ -16,5 +16,6 @@ contextBridge.exposeInMainWorld(
       }
     },
     getImageData: () => ipcRenderer.invoke('get-image-data'),
+    importImages: (filePaths, folder) => ipcRenderer.invoke('import-images', { filePaths, folder }),
   }
 );

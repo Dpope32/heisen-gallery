@@ -6,6 +6,7 @@ import useKeyNavigation from '../../hooks/useKeyNavigation';
 import ImageViewer from './ImageViewer';
 import GalleryItem from './GalleryItem';
 import ConfirmationModal from './ConfirmationModal';
+import DropZone from '../DropZone/DropZone';
 import './ImageGallery.css';
 import { loadImages } from '../imageImports';
 import Masonry from 'react-masonry-css';
@@ -99,6 +100,18 @@ const ImageGallery = forwardRef(({ defaultFolder, autoScrollCommand, onAutoScrol
     setShowSecondConfirm(false);
   };
   
+  const handleImport = useCallback(async (filePaths, targetFolder) => {
+    const result = await window.electron.importImages(filePaths, targetFolder);
+    if (result.success) {
+      const data = await window.electron.getImageData();
+      setImageMap(data);
+      const baseFolders = ["Favorites", "Home"];
+      const dynamicFolders = Object.keys(data).filter(f => f !== "Home");
+      setFolders([...baseFolders, ...dynamicFolders]);
+      setSelectedFolder(targetFolder);
+    }
+  }, []);
+
   const breakpointColumnsObj = { default: 5, 1600: 4, 1200: 3, 800: 2, 600: 1 };
 
   useImperativeHandle(ref, () => ({
@@ -160,6 +173,12 @@ const ImageGallery = forwardRef(({ defaultFolder, autoScrollCommand, onAutoScrol
         cancelText="Nah"
         onConfirm={proceedDownload}
         onCancel={cancelDownload}
+      />
+
+      <DropZone
+        folders={folders.filter(f => f !== "Favorites")}
+        currentFolder={selectedFolder}
+        onImport={handleImport}
       />
     </div>
   );
