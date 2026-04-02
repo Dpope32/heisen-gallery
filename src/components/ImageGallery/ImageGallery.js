@@ -13,7 +13,7 @@ import Masonry from 'react-masonry-css';
 
 const ImageGallery = forwardRef(({ defaultFolder, autoScrollCommand, onAutoScrollStateChange }, ref) => {
   const [imageMap, setImageMap] = useState({});
-  const [folders, setFolders] = useState(["Favorites", "Home"]);
+  const [folders, setFolders] = useState(["Home"]);
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useLocalStorage('favorites', []);
   const [selectedFolder, setSelectedFolder] = useState(favorites.length > 0 ? defaultFolder : "Home");
@@ -21,7 +21,7 @@ const ImageGallery = forwardRef(({ defaultFolder, autoScrollCommand, onAutoScrol
   useEffect(() => {
     loadImages().then(data => {
       setImageMap(data);
-      const baseFolders = ["Favorites", "Home"];
+      const baseFolders = favorites.length > 0 ? ["Favorites", "Home"] : ["Home"];
       const dynamicFolders = Object.keys(data).filter(f => f !== "Home");
       setFolders([...baseFolders, ...dynamicFolders]);
       setLoading(false);
@@ -51,9 +51,17 @@ const ImageGallery = forwardRef(({ defaultFolder, autoScrollCommand, onAutoScrol
 
   const handleFolderChange = folder => setSelectedFolder(folder);
   const handleImageClick = (image, index) => setSelectedImage({ ...image, index });
-  const toggleFavorite = image => setFavorites(prev => 
-    prev.includes(image.src) ? prev.filter(src => src !== image.src) : [...prev, image.src]
-  );
+  const toggleFavorite = image => setFavorites(prev => {
+    const next = prev.includes(image.src) ? prev.filter(src => src !== image.src) : [...prev, image.src];
+    setFolders(f => {
+      const hasFavTab = f.includes("Favorites");
+      if (next.length > 0 && !hasFavTab) return ["Favorites", ...f];
+      if (next.length === 0 && hasFavTab) return f.filter(x => x !== "Favorites");
+      return f;
+    });
+    if (next.length === 0 && selectedFolder === "Favorites") setSelectedFolder("Home");
+    return next;
+  });
 
   const navigateNext = useCallback(() => {
     setSelectedImage(prev => {
@@ -105,7 +113,7 @@ const ImageGallery = forwardRef(({ defaultFolder, autoScrollCommand, onAutoScrol
     if (result.success) {
       const data = await window.electron.getImageData();
       setImageMap(data);
-      const baseFolders = ["Favorites", "Home"];
+      const baseFolders = favorites.length > 0 ? ["Favorites", "Home"] : ["Home"];
       const dynamicFolders = Object.keys(data).filter(f => f !== "Home");
       setFolders([...baseFolders, ...dynamicFolders]);
       setSelectedFolder(targetFolder);
