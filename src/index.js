@@ -1,20 +1,36 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain, protocol, net } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+// Resolve the Images directory (works in both dev and packaged builds)
+function getImagesPath() {
+  // In packaged app, extraResource puts it in resources/Images
+  const prodPath = path.join(process.resourcesPath, 'Images');
+  if (app.isPackaged && fs.existsSync(prodPath)) {
+    return prodPath;
+  }
+  // In dev, it's at src/Images relative to project root
+  return path.join(app.getAppPath(), 'src', 'Images');
+}
+
+// Register custom protocol for serving media files
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'media', privileges: { bypassCSP: true, stream: true, supportFetchAPI: true } }
+]);
+
 const createWindow = () => {
-  // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
+      preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       webSecurity: true,
       autoplayPolicy: 'no-user-gesture-required',
       mediaDevices: true,
@@ -22,17 +38,63 @@ const createWindow = () => {
     },
   });
 
-  // Always load the production build
-  mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
+  mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
-  // Enable autoplay
   mainWindow.webContents.setAudioMuted(true);
   mainWindow.webContents.setBackgroundThrottling(false);
 };
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-app.on('ready', createWindow);
+app.on('ready', () => {
+  // Register media:// protocol to serve images from the filesystem
+  protocol.handle('media', (request) => {
+    const filePath = decodeURIComponent(request.url.replace('media://', ''));
+    const imagesPath = getImagesPath();
+    const fullPath = path.join(imagesPath, filePath);
+
+    // Security: ensure the resolved path is within the Images directory
+    const resolved = path.resolve(fullPath);
+    if (!resolved.startsWith(path.resolve(imagesPath))) {
+      return new Response('Forbidden', { status: 403 });
+    }
+
+    return net.fetch('file:///' + resolved.replace(/\\/g, '/'));
+  });
+
+  // IPC: return the folder structure with file lists
+  ipcMain.handle('get-image-data', () => {
+    const imagesPath = getImagesPath();
+    const mediaExtensions = /\.(png|jpe?g|svg|mp4)$/i;
+    const result = {};
+
+    if (!fs.existsSync(imagesPath)) return result;
+
+    const entries = fs.readdirSync(imagesPath, { withFileTypes: true });
+
+    // Root-level files go into "Home"
+    const rootFiles = entries
+      .filter(e => e.isFile() && mediaExtensions.test(e.name))
+      .map(e => e.name);
+    if (rootFiles.length > 0) {
+      result['Home'] = rootFiles;
+    }
+
+    // Subfolders
+    entries
+      .filter(e => e.isDirectory())
+      .forEach(dir => {
+        const dirPath = path.join(imagesPath, dir.name);
+        const files = fs.readdirSync(dirPath)
+          .filter(f => mediaExtensions.test(f));
+        if (files.length > 0) {
+          result[dir.name] = files;
+        }
+      });
+
+    return result;
+  });
+
+  createWindow();
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {

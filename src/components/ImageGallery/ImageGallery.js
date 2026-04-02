@@ -1,5 +1,5 @@
 // ImageGallery.js
-import React, { useState, useCallback, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useAutoScroll } from '../../hooks/useAutoScroll';
 import useKeyNavigation from '../../hooks/useKeyNavigation';
@@ -7,20 +7,25 @@ import ImageViewer from './ImageViewer';
 import GalleryItem from './GalleryItem';
 import ConfirmationModal from './ConfirmationModal';
 import './ImageGallery.css';
-import images from '../imageImports';
+import { loadImages } from '../imageImports';
 import Masonry from 'react-masonry-css';
 
-const imageMap = images;
-const getAvailableFolders = () => {
-  const baseFolders = ["Favorites", "Home"];
-  const dynamicFolders = Object.keys(imageMap);
-  return [...baseFolders, ...dynamicFolders.filter(folder => folder !== "Home")];
-};
-const folders = getAvailableFolders();
-
 const ImageGallery = forwardRef(({ defaultFolder, autoScrollCommand, onAutoScrollStateChange }, ref) => {
+  const [imageMap, setImageMap] = useState({});
+  const [folders, setFolders] = useState(["Favorites", "Home"]);
+  const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useLocalStorage('favorites', []);
   const [selectedFolder, setSelectedFolder] = useState(favorites.length > 0 ? defaultFolder : "Home");
+
+  useEffect(() => {
+    loadImages().then(data => {
+      setImageMap(data);
+      const baseFolders = ["Favorites", "Home"];
+      const dynamicFolders = Object.keys(data).filter(f => f !== "Home");
+      setFolders([...baseFolders, ...dynamicFolders]);
+      setLoading(false);
+    });
+  }, []);
   const [selectedImage, setSelectedImage] = useState(null);
   const [showFirstConfirm, setShowFirstConfirm] = useState(false);
   const [showSecondConfirm, setShowSecondConfirm] = useState(false);
@@ -38,7 +43,7 @@ const ImageGallery = forwardRef(({ defaultFolder, autoScrollCommand, onAutoScrol
       return uniqueFavorites.map(src => allImages.find(img => img.src === src)).filter(Boolean);
     }
     return imageMap[selectedFolder] || [];
-  }, [selectedFolder, favorites]);
+  }, [selectedFolder, favorites, imageMap]);
 
   // Dark mode is always enabled
   document.body.className = 'dark-mode';
@@ -107,6 +112,10 @@ const ImageGallery = forwardRef(({ defaultFolder, autoScrollCommand, onAutoScrol
     if (autoScrollCommand === 'start') startAutoScroll();
     if (autoScrollCommand === 'stop') stopAutoScroll();
   }, [autoScrollCommand, startAutoScroll, stopAutoScroll]);
+
+  if (loading) {
+    return <div className="gallery-container dark"><div style={{ padding: '2rem', textAlign: 'center' }}>Loading gallery...</div></div>;
+  }
 
   return (
     <div className="gallery-container dark" ref={galleryContainerRef}>

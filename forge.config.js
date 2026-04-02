@@ -92,20 +92,7 @@ module.exports = {
                   test: /\.css$/,
                   use: ['style-loader', 'css-loader'],
                 },
-                {
-                  test: /\.(jpe?g|JPE?G|png|PNG|gif|mp4|MP4|svg)$/,
-                  use: {
-                    loader: 'file-loader',
-                    options: {
-                      name: '[path][name].[ext]',
-                      publicPath: '../..',
-                      outputPath: (url, resourcePath, context) => {
-                        return `src/${url}`;
-                      }
-                    }
-                  }
-                },
-              ],
+                ],
             },
           },
         },

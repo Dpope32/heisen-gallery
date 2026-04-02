@@ -3,7 +3,7 @@
   "productName": "Heisen Gallery",
   "version": "1.0.0",
   "description": "A beautiful image gallery application",
-  "main": "src/index.js",
+  "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
